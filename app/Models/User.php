@@ -40,5 +40,47 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'permissions' => 'array',
     ];
+
+
+    public function getPermissions($user){
+        return $user->permissions;
+    }
+
+    public function getDashboardData($user){
+        $is_admin = $user->role_type == 'admin'?1:0;
+        $user_permissions = $this->getPermissions($user);
+        $permissions_list = config('global.permissions');
+
+        $routes = [];
+        if($is_admin){
+            if($user_permissions){
+                foreach($permissions_list as $route=>$title){
+                    if(in_array($route,$user_permissions)){
+                        $routes[] = [
+                            'key' => $route,
+                            'title' => $title,
+                        ];
+                    }
+                }
+            }
+        }
+
+        $users = [];
+        if($is_admin && in_array('create_user',$user_permissions)){
+            $users = User::get();
+            $roles = config('global.roles');
+        }
+
+        $data = [
+            'routes' => $routes,
+            'roles' => $roles,
+            'users' => $users,
+            'user' => $user,
+            'permissions' => $permissions_list,
+        ];
+
+        return $data;
+    }
 }

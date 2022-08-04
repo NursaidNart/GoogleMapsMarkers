@@ -20,10 +20,12 @@ class UserTableAddAdmin extends Seeder
             dd('email or name or password not defined');
         }
         // if not exist create admin user
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['email' =>  env('ADMIN_EMAIL', ''),], [
                 'name' =>  env('ADMIN_NAME', ''),
                 'password' => Hash::make(env('ADMIN_PASSWORD', '')),
+                'role_type' => 'admin',
+                'permissions' => ['create_user','create_google_maps_markers','show_my_markers'],
             ]
         );
     }

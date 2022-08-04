@@ -22,5 +22,6 @@ const router =  VueRouter.createRouter({
 const app = Vue.createApp(App);
 app.use(router)
 app.use(VueAxios, axios)
+app.config.globalProperties.data = data;
 
 app.mount('#app');

@@ -6,6 +6,9 @@
 
         <title>Google Maps Markers</title>
 
+        <script>
+            let data = {!! json_encode($data) !!};
+        </script>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body id="app">
