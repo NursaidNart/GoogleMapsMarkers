@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GoogleMapsMarkersController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +29,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/welcome',[DashboardController::class, 'welcome']);
     Route::resource('/user', UserController::class);
+    Route::resource('/marker', GoogleMapsMarkersController::class);
+
     Route::any('/{any?}', function ($any) {
         return Redirect('welcome');
         //FIXME

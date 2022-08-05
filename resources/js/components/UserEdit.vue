@@ -86,8 +86,7 @@ export default {
     data() {
         return {
             user: {},
-            selected: null,
-            role_type : [],
+            role_type : {},
             role_type_options: [],
             permissions: [],
             permissions_options: [],
