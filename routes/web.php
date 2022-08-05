@@ -30,6 +30,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/welcome',[DashboardController::class, 'welcome']);
     Route::resource('/user', UserController::class);
     Route::resource('/marker', GoogleMapsMarkersController::class);
+    Route::get('/get_my_markers',[GoogleMapsMarkersController::class, 'getMyMarkers']);
 
     Route::any('/{any?}', function ($any) {
         return Redirect('welcome');

@@ -167,8 +167,8 @@ class GoogleMapsMarkersController extends Controller
             if($user_permissions
                 && is_array($user_permissions)
                 && in_array('create_google_maps_markers',$user_permissions)){
-                $delete_user = GoogleMapsMarker::where('id',$id)->first();
-                $delete_user->delete();
+                $delete_marker= GoogleMapsMarker::where('id',$id)->first();
+                $delete_marker->delete();
                 $error = false;
                 $message = 'Successfully deleted';
 
@@ -188,6 +188,33 @@ class GoogleMapsMarkersController extends Controller
             return response()->json([
                 'error' => $error,
                 'message' => $message,
+            ], 200);
+        }
+
+    }
+
+    public function getMyMarkers()
+    {
+        $user = Auth::user();
+        $user_permissions = $user->getPermissions($user);
+        $error = false;
+        $abort = false;
+        if($user_permissions
+            && is_array($user_permissions)
+            && in_array('show_my_markers',$user_permissions)){
+            $my_markers= GoogleMapsMarker::where('user_id',$user->id)->get();
+            $error = false;
+
+        }else{
+            $abort = true;
+            $message = 'Permission denied';
+        }
+        if($abort){
+            abort(403, $message);
+        }else{
+            return response()->json([
+                'error' => $error,
+                'markers' => $my_markers,
             ], 200);
         }
 
