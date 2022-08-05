@@ -39,7 +39,7 @@ if(data && data.routes && data.routes){
                 component: UserCreate
             });
             routes.push({
-                path: '/edit_user',
+                path: '/edit_user/:id',
                 name: 'Edit User',
                 component: UserEdit
             });
