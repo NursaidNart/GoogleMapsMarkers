@@ -1,7 +1,9 @@
 <template>
-    <NavBar></NavBar>
     <div class="container">
+        <NavBar></NavBar>
+        <!-- TODO add user name and logout  -->
         <router-view></router-view>
+
     </div>
 </template>
 

@@ -8,6 +8,7 @@
                 </div>
                 <div class="card-body">
                     <h5 class="card-title">Users </h5>
+                    <!-- TODO add filter -->
                     <table class="table">
                         <thead>
                             <tr>
@@ -33,6 +34,7 @@
                             </tr>
                         </tbody>
                     </table>
+                    <!-- TODO add paginate -->
                 </div>
             </div>
 
