@@ -16,14 +16,18 @@ class UserTableAddAdmin extends Seeder
      */
     public function run()
     {
-        if(env('ADMIN_EMAIL', '') == ''  || env('ADMIN_NAME', '') == ''  || env('ADMIN_PASSWORD', '') == '' ){
+        $env_admin_email = env('ADMIN_EMAIL', '');
+        $env_admin_name = env('ADMIN_NAME', '');
+        $env_admin_password = env('ADMIN_PASSWORD', '');
+
+        if($env_admin_email == ''  || $env_admin_name == ''  || $env_admin_password == '' ){
             dd('email or name or password not defined');
         }
         // if not exist create admin user
         User::updateOrCreate(
-            ['email' =>  env('ADMIN_EMAIL', ''),], [
-                'name' =>  env('ADMIN_NAME', ''),
-                'password' => Hash::make(env('ADMIN_PASSWORD', '')),
+            ['email' =>  $env_admin_email,], [
+                'name' =>  $env_admin_name,
+                'password' => Hash::make($env_admin_password),
                 'role_type' => 'admin',
                 'permissions' => ['create_user','create_google_maps_markers','show_my_markers'],
             ]

@@ -16,30 +16,18 @@ class GoogleMapsMarkersController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $is_admin = $user->role_type == 'admin'?1:0;
-        $user_permissions = $user->getPermissions($user);
-        $error = false;
-        $abort = false;
-        if ($is_admin){
-            if($user_permissions
-            && is_array($user_permissions)
-            && in_array('create_google_maps_markers',$user_permissions)){
-                $markers = GoogleMapsMarker::with('user')->get();
-                $abort = false;
-            }else{
-                $abort = true;
-                $message = 'Permission denied';
-            }
-        }else{
-            $abort = true;
-            $message = 'Permission denied';
-        }
-        if($abort){
-            abort(403, $message);
+
+        if($user->permissionsCheck(['admin','create_google_maps_markers'])){
+            $markers = GoogleMapsMarker::with('user')->get();
+            return response()->json([
+                'error' => false,
+                'markers' => $markers,
+            ], 200);
+
         }else{
             return response()->json([
-                'error' => $error,
-                'markers' => $markers,
+                'error' => true,
+                'markers' => 'Permission denied',
             ], 200);
         }
     }
@@ -68,52 +56,34 @@ class GoogleMapsMarkersController extends Controller
             'title' => 'required'
         ]);
         $user = Auth::user();
-        $is_admin = $user->role_type == 'admin'?1:0;
-        $user_permissions = $user->getPermissions($user);
-        $error = false;
-        $abort = false;
-        if ($is_admin){
-            if($user_permissions
-                && is_array($user_permissions)
-                && in_array('create_google_maps_markers',$user_permissions)){
-                $marker_data = (object) $request->all();
-                if(isset($marker_data->id)){
-                    $marker = GoogleMapsMarker::where('id',$marker_data->id)->first();
-                }else{
-                    $marker = new GoogleMapsMarker();
-                }
+        if($user->permissionsCheck(['admin','create_google_maps_markers'])){
 
-                $marker->title = $marker_data->title;
-                $marker->lat = $marker_data->lat;
-                $marker->long = $marker_data->long;
-
-                if(isset($marker_data->user_id)){
-                    $marker->user_id = $marker_data->user_id;
-
-                }
-
-                $marker->saveOrFail();
-                $error = false;
-                $message = 'Successfully created';
-
-
-
+            $marker_data = (object) $request->all();
+            if(isset($marker_data->id)){
+                $marker = GoogleMapsMarker::where('id',$marker_data->id)->first();
             }else{
-                $abort = true;
-                $message = 'Permission denied';
+                $marker = new GoogleMapsMarker();
             }
-        }else{
-            $abort = true;
-            $message = 'Permission denied';
-        }
-        if($abort){
-            abort(403, $message);
-        }else{
+
+            $marker->title = $marker_data->title;
+            $marker->lat = $marker_data->lat;
+            $marker->long = $marker_data->long;
+
+            if(isset($marker_data->user_id)){
+                $marker->user_id = $marker_data->user_id;
+
+            }
+
+            $marker->saveOrFail();
             return response()->json([
-                'error' => $error,
-                'message' => $message,
+                'error' => false,
+                'message' => 'Successfully created',
             ], 200);
+
+        }else{
+            abort(403, 'Permission denied');
         }
+
     }
 
     /**
@@ -159,36 +129,18 @@ class GoogleMapsMarkersController extends Controller
     public function destroy($id)
     {
         $user = Auth::user();
-        $is_admin = $user->role_type == 'admin'?1:0;
-        $user_permissions = $user->getPermissions($user);
-        $error = false;
-        $abort = false;
-        if ($is_admin){
-            if($user_permissions
-                && is_array($user_permissions)
-                && in_array('create_google_maps_markers',$user_permissions)){
-                $delete_marker= GoogleMapsMarker::where('id',$id)->first();
-                $delete_marker->delete();
-                $error = false;
-                $message = 'Successfully deleted';
+        if($user->permissionsCheck(['admin','create_google_maps_markers'])){
 
+            $delete_marker= GoogleMapsMarker::where('id',$id)->first();
+            $delete_marker->delete();
 
-            }else{
-                $abort = true;
-                $message = 'Permission denied';
-            }
-        }else{
-            $abort = true;
-            $message = 'Permission denied';
-        }
-
-        if($abort){
-            abort(403, $message);
-        }else{
             return response()->json([
-                'error' => $error,
-                'message' => $message,
+                'error' => false,
+                'message' => 'Successfully deleted',
             ], 200);
+
+        }else{
+            abort(403, 'Permission denied');
         }
 
     }
@@ -196,26 +148,15 @@ class GoogleMapsMarkersController extends Controller
     public function getMyMarkers()
     {
         $user = Auth::user();
-        $user_permissions = $user->getPermissions($user);
-        $error = false;
-        $abort = false;
-        if($user_permissions
-            && is_array($user_permissions)
-            && in_array('show_my_markers',$user_permissions)){
+        if($user->permissionsCheck(['create_google_maps_markers'])){
             $my_markers= GoogleMapsMarker::where('user_id',$user->id)->get();
-            $error = false;
-
-        }else{
-            $abort = true;
-            $message = 'Permission denied';
-        }
-        if($abort){
-            abort(403, $message);
-        }else{
             return response()->json([
-                'error' => $error,
+                'error' => false,
                 'markers' => $my_markers,
             ], 200);
+
+        }else{
+            abort(403, 'Permission denied');
         }
 
     }

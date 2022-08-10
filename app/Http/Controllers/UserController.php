@@ -18,22 +18,12 @@ class UserController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $is_admin = $user->role_type == 'admin'?1:0;
-        $user_permissions = $user->getPermissions($user);
-        $users = null;
-        if ($is_admin){
-            if($user_permissions
-            && is_array($user_permissions)
-            && in_array('create_user',$user_permissions)){
-                $users = User::get();
-            }
-        }
-        if(is_null($users)){
-            abort(403, 'Access denied');
-        }else{
+        if($user->permissionsCheck(['admin','create_user'])){
             return response()->json([
-                'users' => $users,
+                'users' => User::get(),
             ], 200);
+        }else{
+            abort(403,'Permission denied');
         }
 
     }
@@ -63,56 +53,41 @@ class UserController extends Controller
         ]);
 
         $user = Auth::user();
-        $is_admin = $user->role_type == 'admin'?1:0;
-        $user_permissions = $user->getPermissions($user);
         $error = false;
-        $abort = false;
-        if ($is_admin){
-            if($user_permissions
-                && is_array($user_permissions)
-                && in_array('create_user',$user_permissions)){
-                $user_data = $request->all();
-                $new_user = User::where('email',$user_data['email'])->first();
-                if($new_user){
-                    $error = true;
-                    $message = 'Email already exist';
-                }else{
-
-                    $new_user = new User();
-                    $new_user->email = $user_data['email'];
-                    $new_user->name = $user_data['name'];
-                    if(isset($user_data['role_type'])){
-                        $new_user->role_type = $user_data['role_type'];
-                    }
-                    if(isset($user_data['permissions'])){
-                        $new_user->role_type = $user_data['permissions'];
-                    }
-                    if($user_data['password']){
-                        $new_user->password = Hash::make($user_data['password']);
-                    }
-                    $new_user->saveOrFail();
-                    $error = false;
-                    $message = 'Successfully created';
-
-                }
-
+        if($user->permissionsCheck(['admin','create_user'])){
+            $user_data = $request->all();
+            $is_there_email = User::where('email',$user_data['email'])->first();
+            if($is_there_email){
+                $error = true;
+                $message = 'Email already exist';
             }else{
-                $abort = true;
-                $message = 'Permission denied';
+
+                $new_user = new User();
+                $new_user->email = $user_data['email'];
+                $new_user->name = $user_data['name'];
+                if(isset($user_data['role_type'])){
+                    $new_user->role_type = $user_data['role_type'];
+                }
+                if(isset($user_data['permissions'])){
+                    $new_user->role_type = $user_data['permissions'];
+                }
+                if($user_data['password']){
+                    $new_user->password = Hash::make($user_data['password']);
+                }
+                $new_user->saveOrFail();
+                $error = false;
+                $message = 'Successfully created';
+
             }
+
         }else{
-            $abort = true;
-            $message = 'Permission denied';
-        }
-        if($abort){
-            abort(403, $message);
-        }else{
-            return response()->json([
-                'error' => $error,
-                'message' => $message,
-            ], 200);
+            abort(403,'Permission denied');
         }
 
+        return response()->json([
+            'error' => $error,
+            'message' => $message,
+        ], 200);
     }
 
     /**
@@ -124,22 +99,12 @@ class UserController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        $is_admin = $user->role_type == 'admin'?1:0;
-        $user_permissions = $user->getPermissions($user);
-        $result_user = null;
-        if ($is_admin){
-            if($user_permissions
-            && is_array($user_permissions)
-            && in_array('create_user',$user_permissions)){
-                $result_user = User::where('id',$id)->first();
-            }
-        }
-        if(is_null($result_user)){
-            abort(403, 'Access denied');
-        }else{
+        if($user->permissionsCheck(['admin','create_user'])){
             return response()->json([
-                'user' => $result_user,
+                'user' => User::where('id',$id)->first(),
             ], 200);
+        }else{
+            abort(403,'Permission denied');
         }
     }
 
@@ -169,64 +134,61 @@ class UserController extends Controller
         ]);
 
         $user = Auth::user();
-        $is_admin = $user->role_type == 'admin'?1:0;
-        $user_permissions = $user->getPermissions($user);
-        $error = false;
-        $abort = false;
-        if ($is_admin){
-            if($user_permissions
-            && is_array($user_permissions)
-            && in_array('create_user',$user_permissions)){
-                $user_data = $request->all();
-                $update_user = User::where('id',$id)->first();
-                if($update_user){
-                    if($update_user->email != $user_data['email']){
-                        $email_check = User::where('id','!=',$update_user->id)->where('email',$user_data['email'])->first();
-                        if($email_check){
-                            $error = true;
-                            $message = 'Email already exist';
-                        }
-                    }
-
-                    if($update_user->email == env('ADMIN_EMAIL', '')){
-                        $error = true;
-                        $message = 'Admin data is not changeable';
-                    }
-
-                    if (!$error){
-                        $update_user->email = $user_data['email'];
-                        $update_user->name = $user_data['name'];
-                        if(isset($user_data['role_type'])){
-                            $update_user->role_type = $user_data['role_type'];
-                        }
-                        if(isset($user_data['permissions'])){
-                            $update_user->permissions = $user_data['permissions'];
-                        }
-                        if(isset($user_data['password'])){
-                            $update_user->password = Hash::make($user_data['password']);
-                        }
-                        $update_user->saveOrFail();
-                        $error = false;
-                        $message = 'Successfully saved';
-                    }
-
+        if($user->permissionsCheck(['admin','create_user'])){
+            $user_data = $request->all();
+            $update_user = User::where('id',$id)->first();
+            if($update_user){
+                $env_admin_email = env('ADMIN_EMAIL', '');
+                if($update_user->email == $env_admin_email){
+                    return response()->json([
+                        'error' => true,
+                        'message' => 'Admin data is not changeable',
+                    ], 200);
                 }
+                if($user_data['email'] == $env_admin_email){
+                    return response()->json([
+                        'error' => true,
+                        'message' => 'This email is not useable',
+                    ], 200);
+                }
+
+                if($update_user->email != $user_data['email']){
+                    $email_check = User::where('id','!=',$update_user->id)->where('email',$user_data['email'])->first();
+                    if($email_check){
+                        return response()->json([
+                            'error' => true,
+                            'message' => 'Email already exist',
+                        ], 200);
+                    }
+                }
+
+                $update_user->email = $user_data['email'];
+                $update_user->name = $user_data['name'];
+                if(isset($user_data['role_type'])){
+                    $update_user->role_type = $user_data['role_type'];
+                }
+                if(isset($user_data['permissions'])){
+                    $update_user->permissions = $user_data['permissions'];
+                }
+                if(isset($user_data['password'])){
+                    $update_user->password = Hash::make($user_data['password']);
+                }
+                $update_user->saveOrFail();
+
+                return response()->json([
+                    'error' => false,
+                    'message' => 'Successfully saved',
+                ], 200);
             }else{
-                $abort = true;
-                $message = 'Permission denied';
+                return response()->json([
+                    'error' => false,
+                    'message' => 'User is not exist',
+                ], 200);
             }
         }else{
-            $abort = true;
-            $message = 'Permission denied';
+            abort(403,'Permission denied');
         }
-        if($abort){
-            abort(403, $message);
-        }else{
-            return response()->json([
-                'error' => $error,
-                'message' => $message,
-            ], 200);
-        }
+
     }
 
     /**
@@ -238,43 +200,23 @@ class UserController extends Controller
     public function destroy($id)
     {
         $user = Auth::user();
-        $is_admin = $user->role_type == 'admin'?1:0;
-        $user_permissions = $user->getPermissions($user);
-        $error = false;
-        $abort = false;
-        if ($is_admin){
-            if($user_permissions
-                && is_array($user_permissions)
-                && in_array('create_user',$user_permissions)){
+        if($user->permissionsCheck(['admin','create_user'])){
 
-                $delete_user = User::where('id',$id)->first();
-                if($delete_user->email == env('ADMIN_EMAIL', '')){
-                    $error = true;
-                    $message = 'Admin data is not changeable';
-                }
-                if(!$error){
-
-                    $delete_user->delete();
-                    $error = false;
-                    $message = 'Successfully deleted';
-                }
-
-
-            }else{
-                $abort = true;
-                $message = 'Permission denied';
+            $delete_user = User::where('id',$id)->first();
+            if($delete_user->email == env('ADMIN_EMAIL', '')){
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Admin data is not changeable',
+                ], 200);
             }
-        }else{
-            $abort = true;
-            $message = 'Permission denied';
-        }
-        if($abort){
-            abort(403, $message);
-        }else{
+            $delete_user->delete();
             return response()->json([
-                'error' => $error,
-                'message' => $message,
+                'error' => false,
+                'message' => 'Successfully deleted',
             ], 200);
+
+        }else{
+            abort(403,'Permission denied');
         }
     }
 }

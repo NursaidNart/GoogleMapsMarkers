@@ -45,31 +45,46 @@ class User extends Authenticatable
     ];
 
 
-    public function getPermissions($user){
-        return $user->permissions;
+    public function permissionsCheck($control_list){
+        foreach($control_list as $control_key){
+            if($control_key == 'admin'){
+                if($this->role_type != 'admin'){
+                    return false;
+                }
+            }else{
+                if(!$this->permissionsKeyIsExists($control_key)){
+                    return false;
+                }
+            }
+        }
+        return true;
+
+    }
+
+    public function permissionsKeyIsExists($key){
+        if(is_array($this->permissions)){
+            return in_array($key,$this->permissions);
+        }else{
+            return false;
+        }
     }
 
     public function getDashboardData($user){
-        $is_admin = $user->role_type == 'admin'?1:0;
-        $user_permissions = $this->getPermissions($user);
         $permissions_list = config('global.permissions');
 
         $routes = [];
-        if($is_admin){
-            if($user_permissions){
-                foreach($permissions_list as $route=>$title){
-                    if(in_array($route,$user_permissions)){
-                        $routes[] = [
-                            'key' => $route,
-                            'title' => $title,
-                        ];
-                    }
-                }
+        foreach($permissions_list as $route=>$title){
+            if($user->permissionsKeyIsExists($route)){
+                $routes[] = [
+                    'key' => $route,
+                    'title' => $title,
+                ];
             }
         }
 
         $users = [];
-        if($is_admin && in_array('create_user',$user_permissions)){
+        $roles = [];
+        if($user->permissionsCheck(['admin','create_user'])){
             $users = User::get();
             $roles = config('global.roles');
         }
