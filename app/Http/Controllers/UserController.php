@@ -69,7 +69,7 @@ class UserController extends Controller
                     $new_user->role_type = $user_data['role_type'];
                 }
                 if(isset($user_data['permissions'])){
-                    $new_user->role_type = $user_data['permissions'];
+                    $new_user->permissions = $user_data['permissions'];
                 }
                 if($user_data['password']){
                     $new_user->password = Hash::make($user_data['password']);
